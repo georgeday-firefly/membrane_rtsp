@@ -134,6 +134,10 @@ defmodule Membrane.RTSP.Request do
     iex> Request.parse_transport_header(req)
     {:ok, [transport: :TCP, network_mode: :unicast, mode: :record, parameters: %{"interleaved" => {0, 1}}]}
 
+    iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP/TCP;unicast;interleaved=0-1;mode=\\"play\\""}]}
+    iex> Request.parse_transport_header(req)
+    {:ok, [transport: :TCP, network_mode: :unicast, mode: :play, parameters: %{"interleaved" => {0, 1}}]}
+
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP"}]}
     iex> Request.parse_transport_header(req)
     {:ok, [transport: :UDP, network_mode: :multicast, mode: :play, parameters: %{}]}

@@ -3,7 +3,6 @@ defmodule Membrane.RTSP.Response do
   This module represents a RTSP response.
   """
 
-  @start_line_regex ~r/^RTSP\/(\d\.\d) (\d\d\d) [A-Z a-z]+$/
   @line_ending ["\r\n", "\r", "\n"]
 
   @enforce_keys [:status, :version]
@@ -186,7 +185,7 @@ defmodule Membrane.RTSP.Response do
         [line, rest] -> {line, rest}
       end
 
-    case Regex.run(@start_line_regex, line) do
+    case Regex.run(~r/^RTSP\/(\d\.\d) (\d\d\d) [A-Z a-z]+$/, line) do
       [_match, version, code] ->
         case Integer.parse(code) do
           :error ->

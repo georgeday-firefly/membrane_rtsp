@@ -19,7 +19,14 @@ defmodule Membrane.RTSP.Parser.Transport do
 
   play_mode = to_charlist("PLAY") |> Enum.reduce(empty(), &ascii_char(&2, [&1, &1 + 32]))
   record_mode = to_charlist("RECORD") |> Enum.reduce(empty(), &ascii_char(&2, [&1, &1 + 32]))
-  mode_param = string("mode") |> string("=") |> choice([play_mode, record_mode])
+  optional_quote = optional(ascii_char([?\"]))
+
+  mode_param =
+    string("mode")
+    |> string("=")
+    |> ignore(optional_quote)
+    |> choice([play_mode, record_mode])
+    |> ignore(optional_quote)
 
   integer_value_param =
     choice(Enum.map(["ttl", "layers"], &string/1))

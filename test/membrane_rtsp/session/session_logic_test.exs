@@ -4,8 +4,8 @@ defmodule Membrane.RTSP.SessionLogicTest do
   import Mockery
 
   alias Membrane.RTSP
-  alias Membrane.RTSP.State
   alias Membrane.RTSP.{Request, Transport}
+  alias Membrane.RTSP.State
 
   @response_header "RTSP/1.0 200 OK\r\n"
 

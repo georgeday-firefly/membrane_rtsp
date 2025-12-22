@@ -1,6 +1,6 @@
 defmodule Membrane.RTSP.Transport do
   @moduledoc false
-  import Mockery.Macro
+  use Mockery.Macro
 
   require Logger
 

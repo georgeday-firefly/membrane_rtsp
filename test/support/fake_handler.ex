@@ -2,8 +2,7 @@ defmodule Membrane.RTSP.Server.FakeHandler do
   @moduledoc false
 
   use Membrane.RTSP.Server.Handler
-
-  import Mockery.Macro
+  use Mockery.Macro
 
   @impl true
   def handle_open_connection(_conn, _state), do: %{}
@@ -41,6 +40,6 @@ defmodule Membrane.RTSP.Server.FakeHandler do
     mockable(__MODULE__).respond(nil, state)
   end
 
-  @spec respond(Membrane.RTSP.Request.t() | map(), any()) :: nil
+  @spec respond(Membrane.RTSP.Request.t() | map() | nil, any()) :: nil
   def respond(_request, _state), do: nil
 end
