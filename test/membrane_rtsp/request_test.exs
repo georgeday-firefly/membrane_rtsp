@@ -65,7 +65,9 @@ defmodule Membrane.RTSP.RequestTest do
     test "uses absolute URL directly when path is absolute (RFC 2326)" do
       # Bosch cameras return absolute control URLs in SDP
       base_uri = "rtsp://192.168.1.44:554/rtsp_tunnel"
-      absolute_control = "rtsp://192.168.1.44:554/rtsp_tunnel?p=0&line=1&inst=1&vcd=2&stream=video"
+
+      absolute_control =
+        "rtsp://192.168.1.44:554/rtsp_tunnel?p=0&line=1&inst=1&vcd=2&stream=video"
 
       expected_result = """
       SETUP rtsp://192.168.1.44:554/rtsp_tunnel?p=0&line=1&inst=1&vcd=2&stream=video RTSP/1.0

@@ -140,7 +140,10 @@ defmodule Membrane.RTSP.SessionLogicTest do
     assert state.auth == {:digest, %{nonce: "nonce", realm: "realm", qop: nil, nc: 2}}
   end
 
-  test "add digest information with qop in the state (RFC 2617)", %{state: state, request: request} do
+  test "add digest information with qop in the state (RFC 2617)", %{
+    state: state,
+    request: request
+  } do
     mock(:gen_tcp, [send: 2], fn _socket, _request ->
       {:ok,
        "RTSP/1.0 200 OK\r\nWWW-Authenticate: Digest realm=\"VIVOTEK\", nonce=\"abc123\", qop=\"auth\"\r\n\r\n"}
