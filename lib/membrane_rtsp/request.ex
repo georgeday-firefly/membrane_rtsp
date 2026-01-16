@@ -17,7 +17,8 @@ defmodule Membrane.RTSP.Request do
 
   @type transport_header :: [
           transport: :TCP | :UDP,
-          mode: :unicast | :multicast,
+          network_mode: :unicast | :multicast,
+          mode: :play | :record,
           parameters: map()
         ]
 
@@ -123,19 +124,19 @@ defmodule Membrane.RTSP.Request do
   ```
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP;unicast;client_port=30001-30002"}]}
     iex> Request.parse_transport_header(req)
-    {:ok, [transport: :UDP, mode: :unicast, parameters: %{"client_port" => {30001, 30002}}]}
+    {:ok, [transport: :UDP, network_mode: :unicast, mode: :play, parameters: %{"client_port" => {30001, 30002}}]}
 
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP;ttl=15"}]}
     iex> Request.parse_transport_header(req)
-    {:ok, [transport: :UDP, mode: :multicast, parameters: %{"ttl" => 15}]}
+    {:ok, [transport: :UDP, network_mode: :multicast, mode: :play, parameters: %{"ttl" => 15}]}
 
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP/TCP;unicast;interleaved=0-1"}]}
     iex> Request.parse_transport_header(req)
-    {:ok, [transport: :TCP, mode: :unicast, parameters: %{"interleaved" => {0, 1}}]}
+    {:ok, [transport: :TCP, network_mode: :unicast, mode: :play, parameters: %{"interleaved" => {0, 1}}]}
 
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AVP"}]}
     iex> Request.parse_transport_header(req)
-    {:ok, [transport: :UDP, mode: :multicast, parameters: %{}]}
+    {:ok, [transport: :UDP, network_mode: :multicast, mode: :play, parameters: %{}]}
 
     iex> req = %Request{method: "SETUP", headers: [{"Transport", "RTP/AV"}]}
     iex> Request.parse_transport_header(req)
@@ -170,14 +171,9 @@ defmodule Membrane.RTSP.Request do
   defp apply_path(%URI{} = base_url, %__MODULE__{path: path}) do
     parsed = URI.parse(path)
 
-    # If the control path is an absolute URL (has host), use it directly
-    # This is required by RFC 2326 when SDP contains absolute control URLs
     if parsed.host do
       %URI{parsed | userinfo: nil} |> URI.to_string()
     else
-      # When appending a relative control path (like "trackID=2"), the query
-      # string from the base URL should not be included - it was specific to
-      # the stream URL, not the track SETUP URL
       parsed
       |> Map.get(:path)
       |> Path.relative_to(base_url.path)

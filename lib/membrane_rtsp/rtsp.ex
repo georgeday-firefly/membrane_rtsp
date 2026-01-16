@@ -322,46 +322,46 @@ defmodule Membrane.RTSP do
     ha1 = md5([username, options.realm, password])
     ha2 = md5([request.method, encoded_uri])
 
-    case options[:qop] do
-      nil ->
-        # RFC 2069 style (no qop)
-        response = md5([ha1, options.nonce, ha2])
+    encode_digest_auth(username, encoded_uri, ha1, ha2, options)
+  end
 
-        Enum.join(
-          [
-            "Digest",
-            ~s(username="#{username}",),
-            ~s(realm="#{options.realm}",),
-            ~s(nonce="#{options.nonce}",),
-            ~s(uri="#{encoded_uri}",),
-            ~s(response="#{response}")
-          ],
-          " "
-        )
+  defp encode_digest_auth(username, encoded_uri, ha1, ha2, %{qop: nil} = options) do
+    response = md5([ha1, options.nonce, ha2])
 
-      qop ->
-        # RFC 2617 style (with qop)
-        nc = options[:nc] || 1
-        nc_hex = :io_lib.format("~8.16.0b", [nc]) |> IO.iodata_to_binary()
-        cnonce = :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
-        response = md5([ha1, options.nonce, nc_hex, cnonce, qop, ha2])
+    Enum.join(
+      [
+        "Digest",
+        ~s(username="#{username}",),
+        ~s(realm="#{options.realm}",),
+        ~s(nonce="#{options.nonce}",),
+        ~s(uri="#{encoded_uri}",),
+        ~s(response="#{response}")
+      ],
+      " "
+    )
+  end
 
-        "Digest " <>
-          Enum.join(
-            [
-              ~s(username="#{username}"),
-              ~s(realm="#{options.realm}"),
-              ~s(nonce="#{options.nonce}"),
-              ~s(uri="#{encoded_uri}"),
-              ~s(response="#{response}"),
-              ~s(algorithm=MD5),
-              ~s(qop=#{qop}),
-              ~s(nc=#{nc_hex}),
-              ~s(cnonce="#{cnonce}")
-            ],
-            ","
-          )
-    end
+  defp encode_digest_auth(username, encoded_uri, ha1, ha2, %{qop: qop} = options) do
+    nc = options[:nc] || 1
+    nc_hex = :io_lib.format("~8.16.0b", [nc]) |> IO.iodata_to_binary()
+    cnonce = :crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)
+    response = md5([ha1, options.nonce, nc_hex, cnonce, qop, ha2])
+
+    "Digest " <>
+      Enum.join(
+        [
+          ~s(username="#{username}"),
+          ~s(realm="#{options.realm}"),
+          ~s(nonce="#{options.nonce}"),
+          ~s(uri="#{encoded_uri}"),
+          ~s(response="#{response}"),
+          ~s(algorithm=MD5),
+          ~s(qop=#{qop}),
+          ~s(nc=#{nc_hex}),
+          ~s(cnonce="#{cnonce}")
+        ],
+        ","
+      )
   end
 
   @spec md5([String.t()]) :: String.t()
