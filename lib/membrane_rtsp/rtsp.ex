@@ -268,10 +268,9 @@ defmodule Membrane.RTSP do
           {:ok, Response.t(), State.t()} | {:error, reason :: any()}
   defp parse_response(raw_response, state) do
     with {:ok, parsed_response} <- Response.parse(raw_response),
-         {:ok, state} <- handle_session_id(parsed_response, state),
-         {:ok, state} <- detect_authentication_type(parsed_response, state) do
-      state = %State{state | cseq: state.cseq + 1}
-      # Increment nc counter for qop auth after each request
+         {:ok, %State{} = state} <- handle_session_id(parsed_response, state),
+         {:ok, %State{} = state} <- detect_authentication_type(parsed_response, state) do
+      state = %{state | cseq: state.cseq + 1}
       state = increment_nc(state)
       {:ok, parsed_response, state}
     end
@@ -376,12 +375,12 @@ defmodule Membrane.RTSP do
   # Some responses do not have to return the Session ID
   # If it does return one, it needs to match one stored in the state.
   @spec handle_session_id(Response.t(), State.t()) :: {:ok, State.t()} | {:error, reason :: any()}
-  defp handle_session_id(%Response{} = response, state) do
+  defp handle_session_id(%Response{} = response, %State{} = state) do
     with {:ok, session_value} <- Response.get_header(response, "Session") do
       [session_id | _rest] = String.split(session_value, ";")
 
       case state do
-        %State{session_id: nil} -> {:ok, %State{state | session_id: session_id}}
+        %State{session_id: nil} -> {:ok, %{state | session_id: session_id}}
         %State{session_id: ^session_id} -> {:ok, state}
         _else -> {:error, :invalid_session_id}
       end
@@ -398,10 +397,9 @@ defmodule Membrane.RTSP do
       [_match, nonce] = Regex.run(~r/nonce=\"(?<nonce>.*)\"/U, digest)
       [_match, realm] = Regex.run(~r/realm=\"(?<realm>.*)\"/U, digest)
 
-      # Extract qop if present (RFC 2617)
       qop =
         case Regex.run(~r/qop=\"?([^",]+)\"?/, digest) do
-          [_, qop_value] -> qop_value
+          [_match, qop_value] -> qop_value
           nil -> nil
         end
 
