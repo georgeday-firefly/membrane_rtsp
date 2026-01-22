@@ -59,7 +59,7 @@ defmodule Membrane.RTSP.Response do
   def parse(response) do
     [headers, body] = String.split(response, ["\r\n\r\n", "\n\n", "\r\r"], parts: 2)
 
-    with {:ok, {response, headers}} <- parse_start_line(headers),
+    with {:ok, {%__MODULE__{} = response, headers}} <- parse_start_line(headers),
          {:ok, headers} <- parse_headers(headers),
          {:ok, body} <- parse_body(body, headers) do
       {:ok, %__MODULE__{response | headers: headers, body: body}}
@@ -110,7 +110,7 @@ defmodule Membrane.RTSP.Response do
     headers = Enum.at(split_response, 0)
     body = Enum.at(split_response, 1)
 
-    with {:ok, {response, headers}} <- parse_start_line(headers),
+    with {:ok, {%__MODULE__{} = response, headers}} <- parse_start_line(headers),
          {:ok, headers} <- parse_headers(headers),
          false <- is_nil(body),
          body_size <- byte_size(body),
@@ -239,6 +239,8 @@ defmodule Membrane.RTSP.Response do
   defp render_status(404), do: "Not Found"
   defp render_status(405), do: "Method Not Allowed"
   defp render_status(455), do: "Method Not Valid In This State"
+  defp render_status(461), do: "Unsupported Transport"
   defp render_status(500), do: "Internal Server Error"
   defp render_status(501), do: "Not Implemented"
+  defp render_status(_status), do: "Generic Error"
 end

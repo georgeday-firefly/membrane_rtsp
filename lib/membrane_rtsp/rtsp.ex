@@ -75,7 +75,7 @@ defmodule Membrane.RTSP do
 
   @doc """
   Transfer the control of the TCP socket the session was using to a new process. For more information see `:gen_tcp.controlling_process/2`.
-  From now on the session won't try to receive responses to requests from the socket, since now an other process is controlling it. 
+  From now on the session won't try to receive responses to requests from the socket, since now an other process is controlling it.
   Instead of this, the session will synchronously wait for the response to be supplied with `handle_response/2`.
   """
   @spec transfer_socket_control(t(), pid()) ::
@@ -267,7 +267,7 @@ defmodule Membrane.RTSP do
   defp parse_response(raw_response, state) do
     with {:ok, parsed_response} <- Response.parse(raw_response),
          {:ok, state} <- handle_session_id(parsed_response, state),
-         {:ok, state} <- detect_authentication_type(parsed_response, state) do
+         {:ok, %State{} = state} <- detect_authentication_type(parsed_response, state) do
       state = %State{state | cseq: state.cseq + 1}
       {:ok, parsed_response, state}
     end
@@ -338,7 +338,7 @@ defmodule Membrane.RTSP do
   # Some responses do not have to return the Session ID
   # If it does return one, it needs to match one stored in the state.
   @spec handle_session_id(Response.t(), State.t()) :: {:ok, State.t()} | {:error, reason :: any()}
-  defp handle_session_id(%Response{} = response, state) do
+  defp handle_session_id(%Response{} = response, %State{} = state) do
     with {:ok, session_value} <- Response.get_header(response, "Session") do
       [session_id | _rest] = String.split(session_value, ";")
 

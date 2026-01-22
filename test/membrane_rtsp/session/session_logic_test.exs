@@ -32,7 +32,7 @@ defmodule Membrane.RTSP.SessionLogicTest do
          adds default headers and increments cseq every time a request is \
          resolved successfully\
          """,
-         %{state: state, request: request} do
+         %{state: %State{} = state, request: request} do
       mock(:gen_tcp, [send: 2], fn _socket, serialized_request ->
         assert String.contains?(serialized_request, "\r\nUser-Agent")
         mock_response(serialized_request)
@@ -55,7 +55,7 @@ defmodule Membrane.RTSP.SessionLogicTest do
         RTSP.handle_call({:execute, %Request{method: "OPTIONS"}}, nil, state)
     end
 
-    test "preserves session_id", %{request: request, state: state} do
+    test "preserves session_id", %{request: request, state: %State{} = state} do
       state = %State{state | session_id: nil}
       session_id = "arbitrary_string"
       request = request |> Request.with_header("Session", session_id)
@@ -73,7 +73,7 @@ defmodule Membrane.RTSP.SessionLogicTest do
                RTSP.handle_call({:execute, request}, nil, state)
     end
 
-    test "add session_id header to request", %{request: request, state: state} do
+    test "add session_id header to request", %{request: request, state: %State{} = state} do
       session_id = "arbitrary_string"
       state = %State{state | session_id: session_id}
 
@@ -87,7 +87,7 @@ defmodule Membrane.RTSP.SessionLogicTest do
     end
 
     test "applies credentials to request if they were provided in the uri", %{
-      state: state,
+      state: %State{} = state,
       request: request
     } do
       credentials = "login:password"
@@ -109,7 +109,9 @@ defmodule Membrane.RTSP.SessionLogicTest do
                RTSP.handle_call({:execute, request}, nil, state)
     end
 
-    test "does not apply credentials to request if they were already present", %{state: state} do
+    test "does not apply credentials to request if they were already present", %{
+      state: %State{} = state
+    } do
       request = %Request{method: "OPTIONS", headers: [{"Authorization", "Basic data"}]}
 
       mock(:gen_tcp, [send: 2], fn _socket, serialized_request ->
@@ -140,7 +142,7 @@ defmodule Membrane.RTSP.SessionLogicTest do
     assert state.auth == {:digest, %{nonce: "nonce", realm: "realm"}}
   end
 
-  test "digest auth", %{state: state, request: request} do
+  test "digest auth", %{state: %State{} = state, request: request} do
     credentials = "login:password"
 
     mock(:gen_tcp, [send: 2], fn _socket, serialized_request ->
