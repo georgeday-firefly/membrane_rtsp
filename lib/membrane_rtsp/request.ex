@@ -177,12 +177,10 @@ defmodule Membrane.RTSP.Request do
     if parsed.host do
       %URI{parsed | userinfo: nil} |> URI.to_string()
     else
-      parsed
-      |> Map.get(:path)
+      parsed.path
       |> Path.relative_to(base_url.path)
       |> then(&Path.join(base_url.path, &1))
-      |> then(&Map.put(base_url, :path, &1))
-      |> Map.put(:query, nil)
+      |> then(&%URI{base_url | path: &1, query: nil})
       |> URI.to_string()
     end
   end
